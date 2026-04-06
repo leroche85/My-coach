@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STRIDE · Coach IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   TOKENS
+══════════════════════════════════════ */
+:root {
+  --bg:       #09090b;
+  --s1:       #111113;
+  --s2:       #18181c;
+  --s3:       #202024;
+  --border:   #27272b;
+  --border2:  #323238;
+  --text:     #e4e4e7;
+  --text2:    #a1a1aa;
+  --text3:    #71717a;
+  --lime:     #c8ff57;
+  --lime2:    #a3d93e;
+  --lime-bg:  rgba(200,255,87,.07);
+  --lime-glow:rgba(200,255,87,.18);
+  --amber:    #f59e0b;
+  --red:      #ef4444;
+  --blue:     #60a5fa;
+  --r:        4px;
+}
+
+/* ══════════════════════════════════════
+   RESET + BASE
+══════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* subtle noise */
+body::before {
+  content:'';
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='f'%3E%3CfeTurbulence baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23f)' opacity='.035'/%3E%3C/svg%3E");
+}
+
+/* ══════════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════════ */
+#login-screen {
+  position: fixed; inset: 0; z-index: 500;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px;
+  gap: 0;
+}
+
+.login-wordmark {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(56px, 14vw, 120px);
+  font-style: italic;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--border2);
+  letter-spacing: -.02em;
+  margin-bottom: 16px;
+  user-select: none;
+}
+
+.login-headline {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(20px, 4vw, 34px);
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 8px;
+}
+.login-headline span { color: var(--lime); font-style: normal; }
+
+.login-sub {
+  font-size: 14px; color: var(--text3);
+  text-align: center; max-width: 380px;
+  line-height: 1.65; margin-bottom: 36px;
+}
+
+.login-features {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+.feat-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  padding: 5px 11px;
+}
+
+.btn-connect {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--lime);
+  color: var(--bg);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 14px 28px;
+  border: none; cursor: pointer;
+  transition: background .2s, box-shadow .2s, transform .15s;
+  font-weight: 500;
+}
+.btn-connect:hover {
+  background: #d8ff77;
+  box-shadow: 0 0 28px var(--lime-glow);
+  transform: translateY(-1px);
+}
+.btn-connect svg { width: 18px; height: 18px; }
+
+.login-fine {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  margin-top: 14px; text-align: center;
+  max-width: 340px; line-height: 1.6;
+}
+
+/* ══════════════════════════════════════
+   TOP BAR
+══════════════════════════════════════ */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  flex-shrink: 0;
+  position: relative; z-index: 10;
+}
+
+.wordmark {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: -.01em;
+  color: var(--text);
+}
+.wordmark span { color: var(--lime); }
+
+.topbar-center {
+  display: flex; gap: 2px;
+}
+
+.tab-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text3);
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: color .2s, border-color .2s, background .2s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--lime);
+  border-color: var(--border2);
+  background: var(--s2);
+}
+
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.athlete-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--s1);
+  border: 1px solid var(--border2);
+  padding: 4px 12px 4px 5px;
+  font-size: 12px; color: var(--text2);
+  cursor: pointer;
+  transition: border-color .2s;
+  border-radius: 999px;
+}
+.athlete-pill:hover { border-color: var(--lime2); }
+.athlete-pill img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; background: var(--s3); }
+.athlete-pill .pname { color: var(--text); font-weight: 500; }
+
+.sync-pill {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .08em;
+  color: var(--text3);
+}
+.sdot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text3);
+  flex-shrink: 0;
+}
+.sdot.live { background: var(--lime); box-shadow: 0 0 6px var(--lime); animation: sdpulse 2s infinite; }
+.sdot.syncing { background: var(--amber); animation: sdpulse .7s infinite; }
+.sdot.err { background: var(--red); }
+@keyframes sdpulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* ══════════════════════════════════════
+   MAIN LAYOUT
+══════════════════════════════════════ */
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative; z-index: 1;
+}
+
+/* ══════════════════════════════════════
+   LEFT PANEL
+══════════════════════════════════════ */
+.left-panel {
+  width: 230px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  background: var(--bg);
+  overflow-y: auto;
+}
+.left-panel::-webkit-scrollbar { width: 3px; }
+.left-panel::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.lp-block {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.lp-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 10px;
+}
+
+.kpi-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.kpi-key { font-size: 12px; color: var(--text2); }
+.kpi-val { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); }
+.kpi-val.hi { color: var(--lime); }
+
+.act-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: border-color .2s, background .15s;
+}
+.act-row:hover { border-color: var(--lime2); background: var(--s2); }
+.act-row.is-new { border-color: var(--lime2); }
+
+.act-icon { font-size: 15px; flex-shrink: 0; }
+.act-info { flex: 1; min-width: 0; }
+.act-name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.act-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+.new-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px; letter-spacing: .1em;
+  border: 1px solid var(--lime2);
+  color: var(--lime);
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.qbtn {
+  display: block; width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 11px;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background .15s;
+}
+.qbtn:hover { border-color: var(--lime); color: var(--lime); background: var(--lime-bg); }
+.qbtn .arr { float: right; opacity: .35; }
+
+/* ══════════════════════════════════════
+   RIGHT CONTENT
+══════════════════════════════════════ */
+.right-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* SYNC BAR */
+.sync-bar {
+  display: none;
+  align-items: center; gap: 10px;
+  padding: 7px 20px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3);
+  flex-shrink: 0;
+}
+.sync-bar.show { display: flex; }
+.spin { width: 11px; height: 11px; border: 1.5px solid var(--border2); border-top-color: var(--amber); border-radius: 50%; animation: rotating .7s linear infinite; flex-shrink: 0; }
+@keyframes rotating { to { transform: rotate(360deg); } }
+
+/* VIEWS */
+.view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.view.active { display: flex; }
+
+/* ─── CHAT VIEW ─── */
+.messages {
+  flex: 1; overflow-y: auto;
+  padding: 22px 26px;
+  display: flex; flex-direction: column; gap: 16px;
+  scroll-behavior: smooth;
+}
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.msg { display: flex; gap: 12px; max-width: 820px; animation: msgIn .25s ease both; }
+@keyframes msgIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+.msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+.msg-av {
+  width: 30px; height: 30px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border2);
+  font-size: 14px;
+}
+.msg.coach .msg-av {
+  background: var(--lime-bg);
+  border-color: var(--lime2);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .04em;
+  color: var(--lime); font-weight: 500;
+}
+
+.msg-bubble {
+  padding: 12px 16px;
+  border: 1px solid var(--border2);
+  line-height: 1.7; font-size: 13.5px;
+  max-width: 600px;
+}
+.msg.coach .msg-bubble { background: var(--s1); border-left: 2px solid var(--lime2); }
+.msg.user  .msg-bubble { background: var(--s2); text-align: right; }
+
+.msg-bubble p { margin-bottom: 7px; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble strong { color: var(--lime); font-weight: 600; }
+.msg-bubble em { color: var(--text3); }
+.msg-bubble ul { list-style: none; margin: 6px 0; }
+.msg-bubble ul li { padding: 3px 0 3px 16px; position: relative; }
+.msg-bubble ul li::before { content: '›'; position: absolute; left: 0; color: var(--lime); }
+.msg-bubble h3 { font-size: 13px; font-weight: 600; color: var(--lime); margin: 10px 0 5px; letter-spacing: .03em; }
+.msg-bubble code { font-family: 'DM Mono', monospace; font-size: 12px; background: var(--s3); padding: 1px 5px; color: var(--amber); }
+
+/* calendar card inside bubble */
+.cal-card {
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-left: 2px solid var(--blue);
+  padding: 10px 13px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+.cal-card-title { font-weight: 600; margin-bottom: 3px; }
+.cal-card-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+.cal-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.cal-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 6px 12px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background .15s;
+}
+.cal-btn:hover { border-color: var(--blue); color: var(--blue); }
+.cal-btn.primary { border-color: var(--lime2); color: var(--lime); }
+.cal-btn.primary:hover { background: var(--lime-bg); }
+
+.typing { display: flex; gap: 4px; align-items: center; padding: 3px 0; }
+.td { width: 5px; height: 5px; border-radius: 50%; background: var(--lime2); animation: tdBounce 1.2s infinite; }
+.td:nth-child(2){animation-delay:.15s} .td:nth-child(3){animation-delay:.3s}
+@keyframes tdBounce { 0%,80%,100%{transform:translateY(0);opacity:.35} 40%{transform:translateY(-5px);opacity:1} }
+
+/* input bar */
+.input-zone {
+  border-top: 1px solid var(--border);
+  padding: 13px 20px;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.input-inner { display: flex; gap: 9px; align-items: flex-end; }
+
+textarea#chat-input {
+  flex: 1;
+  background: var(--s1);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13.5px;
+  padding: 10px 15px;
+  resize: none;
+  min-height: 42px; max-height: 110px;
+  line-height: 1.5; outline: none;
+  transition: border-color .2s;
+}
+textarea#chat-input:focus { border-color: var(--lime2); }
+textarea#chat-input::placeholder { color: var(--text3); }
+
+.send-btn {
+  width: 42px; height: 42px; flex-shrink: 0;
+  background: var(--lime);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, transform .15s;
+}
+.send-btn:hover { background: #d8ff77; transform: scale(1.06); }
+.send-btn:disabled { background: var(--border2); cursor: not-allowed; transform: none; }
+.send-btn svg { width: 16px; height: 16px; fill: var(--bg); }
+.input-hint { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--text3); margin-top: 5px; }
+
+/* ─── PLAN VIEW ─── */
+.plan-view-inner {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+.plan-view-inner::-webkit-scrollbar { width: 4px; }
+.plan-view-inner::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.plan-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.plan-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 28px;
+  color: var(--text);
+}
+.plan-title span { color: var(--lime); }
+
+.plan-actions { display: flex; gap: 8px; }
+.pact-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 8px 16px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .2s;
+}
+.pact-btn:hover { border-color: var(--lime); color: var(--lime); background: var(--lime-bg); }
+.pact-btn.primary { background: var(--lime); color: var(--bg); border-color: var(--lime); }
+.pact-btn.primary:hover { background: #d8ff77; }
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.day-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  padding: 10px;
+  min-height: 100px;
+  transition: border-color .2s;
+  cursor: pointer;
+  position: relative;
+}
+.day-card:hover { border-color: var(--border2); }
+.day-card.has-session { border-color: var(--lime2); }
+.day-card.rest { opacity: .6; }
+.day-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 6px;
+}
+.day-date {
+  font-size: 18px; font-weight: 600; color: var(--text);
+  margin-bottom: 8px;
+}
+.day-card.today .day-date {
+  color: var(--lime);
+}
+.session-type {
+  font-size: 11px; font-weight: 600;
+  color: var(--text); margin-bottom: 3px;
+}
+.session-detail {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  line-height: 1.5;
+}
+.session-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  position: absolute; top: 10px; right: 10px;
+}
+.session-dot.easy { background: var(--lime2); }
+.session-dot.tempo { background: var(--amber); }
+.session-dot.interval { background: var(--red); }
+.session-dot.long { background: var(--blue); }
+.session-dot.rest { background: var(--border2); }
+
+.plan-summary {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 12px; margin-bottom: 24px;
+}
+.psumm-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  padding: 14px;
+}
+.psumm-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+.psumm-val { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; color: var(--text); }
+.psumm-val.hi { color: var(--lime); }
+
+/* ─── PERFORMANCE VIEW ─── */
+.perf-view-inner {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+.perf-view-inner::-webkit-scrollbar { width: 4px; }
+.perf-view-inner::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.section-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.section-title span { color: var(--lime); }
+
+.perf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.perf-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--lime2);
+  padding: 14px 16px;
+}
+.perf-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+.perf-val { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; color: var(--text); }
+.perf-delta { font-size: 11px; margin-top: 3px; }
+.perf-delta.up { color: var(--lime); }
+.perf-delta.down { color: var(--red); }
+.perf-delta.neutral { color: var(--text3); }
+
+.trend-bar-wrap { margin-bottom: 24px; }
+.trend-bars {
+  display: flex; align-items: flex-end; gap: 4px;
+  height: 80px;
+  padding-bottom: 2px;
+}
+.t-bar {
+  flex: 1;
+  background: var(--lime2);
+  opacity: .5;
+  transition: opacity .2s;
+  min-width: 8px;
+  border-radius: 1px 1px 0 0;
+  cursor: pointer;
+  position: relative;
+}
+.t-bar:hover { opacity: 1; }
+.t-bar.active { opacity: 1; background: var(--lime); }
+.trend-labels { display: flex; gap: 4px; margin-top: 4px; }
+.trend-lbl { flex: 1; font-family: 'DM Mono', monospace; font-size: 8px; color: var(--text3); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ══════════════════════════════════════
+   PLAN PENDING BANNER
+══════════════════════════════════════ */
+.pending-banner {
+  display: none;
+  align-items: center; justify-content: space-between;
+  padding: 10px 20px;
+  background: var(--s2);
+  border-bottom: 1px solid var(--border2);
+  font-size: 12px; color: var(--text2);
+  flex-shrink: 0;
+}
+.pending-banner.show { display: flex; }
+.pbanner-btns { display: flex; gap: 8px; }
+.pbtn {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 5px 11px;
+  border: 1px solid var(--border2);
+  background: transparent; color: var(--text2);
+  cursor: pointer; transition: all .2s;
+}
+.pbtn:hover { border-color: var(--blue); color: var(--blue); }
+.pbtn.confirm { border-color: var(--lime2); color: var(--lime); }
+.pbtn.confirm:hover { background: var(--lime-bg); }
+
+/* ══════════════════════════════════════
+   EMPTY STATES
+══════════════════════════════════════ */
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--text3);
+  gap: 10px;
+  padding: 40px;
+}
+.empty-state .icon { font-size: 36px; opacity: .4; }
+.empty-state p { font-size: 13px; text-align: center; line-height: 1.6; }
+.empty-state button {
+  margin-top: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 9px 18px;
+  border: 1px solid var(--lime2);
+  background: transparent; color: var(--lime);
+  cursor: pointer; transition: background .2s;
+}
+.empty-state button:hover { background: var(--lime-bg); }
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 700px) {
+  .left-panel { display: none; }
+  .topbar-center { display: none; }
+  .messages { padding: 14px; }
+  .week-grid { grid-template-columns: repeat(2, 1fr); }
+  .plan-summary { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-wordmark">stride</div>
+  <h1 class="login-headline">Tu coach de <span>running</span><br>con IA</h1>
+  <p class="login-sub">Planes adaptativos basados en tu historial real de Strava. Objetivo: composición corporal y rendimiento.</p>
+  <div class="login-features">
+    <div class="feat-tag">Strava sync</div>
+    <div class="feat-tag">Planes adaptativos</div>
+    <div class="feat-tag">Google Calendar</div>
+    <div class="feat-tag">Memoria persistente</div>
+    <div class="feat-tag">Análisis de rendimiento</div>
+  </div>
+  <button class="btn-connect" onclick="connectStrava()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+    Conectar con Strava
+  </button>
+  <p class="login-fine">Google Calendar se conecta automáticamente al generar tu primer plan.</p>
+</div>
+
+<!-- ══════════════════════════════════════
+     TOP BAR
+══════════════════════════════════════ -->
+<div class="topbar">
+  <div class="wordmark">stride<span>.</span></div>
+  <div class="topbar-center">
+    <button class="tab-btn active" onclick="showView('chat')" id="tab-chat">Coach</button>
+    <button class="tab-btn" onclick="showView('plan')" id="tab-plan">Plan</button>
+    <button class="tab-btn" onclick="showView('perf')" id="tab-perf">Rendimiento</button>
+  </div>
+  <div class="topbar-right">
+    <div class="athlete-pill" id="athlete-pill" style="display:none" onclick="disconnect()">
+      <img id="av-img" src="" alt="">
+      <span class="pname" id="av-name">—</span>
+      <span style="color:var(--text3);font-size:10px;margin-left:3px">· salir</span>
+    </div>
+    <div class="sync-pill">
+      <div class="sdot" id="sdot"></div>
+      <span id="stxt">offline</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP BODY
+══════════════════════════════════════ -->
+<div class="app-body">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="lp-block" id="lp-stats" style="display:none">
+      <div class="lp-label">Últimos 30 días</div>
+      <div class="kpi-row"><span class="kpi-key">sesiones</span><span class="kpi-val hi" id="lp-count">—</span></div>
+      <div class="kpi-row"><span class="kpi-key">distancia</span><span class="kpi-val" id="lp-dist">—</span></div>
+      <div class="kpi-row"><span class="kpi-key">tiempo</span><span class="kpi-val" id="lp-time">—</span></div>
+      <div class="kpi-row"><span class="kpi-key">ritmo medio</span><span class="kpi-val" id="lp-pace">—</span></div>
+      <div class="kpi-row"><span class="kpi-key">desnivel</span><span class="kpi-val" id="lp-elev">—</span></div>
+    </div>
+
+    <div class="lp-block" id="lp-recents" style="display:none">
+      <div class="lp-label">Actividades</div>
+      <div id="recents-list"></div>
+    </div>
+
+    <div class="lp-block">
+      <div class="lp-label">Preguntas rápidas</div>
+      <button class="qbtn" onclick="quickAsk('Analiza mi carga de entrenamiento esta semana y la semana pasada. ¿Estoy progresando bien para mi objetivo de composición corporal?')">Carga semanal <span class="arr">→</span></button>
+      <button class="qbtn" onclick="quickAsk('¿Cómo está mi recuperación? ¿Noto señales de sobreentrenamiento?')">Recuperación <span class="arr">→</span></button>
+      <button class="qbtn" onclick="quickAsk('Crea un plan de entrenamiento para los próximos 7 días optimizado para perder grasa manteniendo rendimiento.')">Nuevo plan 7 días <span class="arr">→</span></button>
+      <button class="qbtn" onclick="quickAsk('¿Cuál ha sido mi evolución de ritmo en el último mes? ¿Estoy mejorando?')">Evolución de ritmo <span class="arr">→</span></button>
+      <button class="qbtn" onclick="showView('perf')">Ver rendimiento <span class="arr">→</span></button>
+    </div>
+  </div>
+
+  <!-- RIGHT CONTENT -->
+  <div class="right-content">
+
+    <!-- SYNC BAR -->
+    <div class="sync-bar" id="sync-bar">
+      <div class="spin"></div>
+      <span id="sync-bar-msg">Sincronizando actividades nuevas...</span>
+    </div>
+
+    <!-- PLAN PENDING BANNER -->
+    <div class="pending-banner" id="pending-banner">
+      <span>📅 Plan generado — ¿Añadir entrenamientos a Google Calendar?</span>
+      <div class="pbanner-btns">
+        <button class="pbtn" onclick="hidePendingBanner()">Descartar</button>
+        <button class="pbtn confirm" onclick="pushPlanToCalendar()">✓ Confirmar y añadir</button>
+      </div>
+    </div>
+
+    <!-- CHAT VIEW -->
+    <div class="view active" id="view-chat">
+      <div class="messages" id="messages"></div>
+      <div class="input-zone">
+        <div class="input-inner">
+          <textarea id="chat-input" placeholder="Habla con tu coach..." rows="1"
+            onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+        <div class="input-hint">↵ enviar · shift+↵ nueva línea</div>
+      </div>
+    </div>
+
+    <!-- PLAN VIEW -->
+    <div class="view" id="view-plan">
+      <div class="plan-view-inner" id="plan-view-inner">
+        <div class="empty-state" id="plan-empty">
+          <div class="icon">📋</div>
+          <p>Aún no tienes un plan activo.<br>Dile al coach que te genere uno.</p>
+          <button onclick="quickAsk('Crea un plan de entrenamiento para los próximos 7 días optimizado para perder grasa y mejorar mi rendimiento en running.')">Generar plan ahora</button>
+        </div>
+        <div id="plan-content" style="display:none">
+          <div class="plan-header">
+            <div>
+              <div class="plan-title">Plan <span id="plan-week-label">semana actual</span></div>
+              <div style="font-size:12px;color:var(--text3);margin-top:3px;font-family:'DM Mono',monospace" id="plan-meta">—</div>
+            </div>
+            <div class="plan-actions">
+              <button class="pact-btn" onclick="quickAsk('Adapta el plan de esta semana según mis últimas actividades.')">Adaptar plan</button>
+              <button class="pact-btn primary" onclick="pushPlanToCalendar()">📅 Añadir a Google Calendar</button>
+            </div>
+          </div>
+          <div class="plan-summary">
+            <div class="psumm-card"><div class="psumm-label">Sesiones</div><div class="psumm-val hi" id="ps-sessions">—</div></div>
+            <div class="psumm-card"><div class="psumm-label">Km totales</div><div class="psumm-val" id="ps-km">—</div></div>
+            <div class="psumm-card"><div class="psumm-label">Tiempo est.</div><div class="psumm-val" id="ps-time">—</div></div>
+            <div class="psumm-card"><div class="psumm-label">Carga</div><div class="psumm-val" id="ps-load">—</div></div>
+          </div>
+          <div class="week-grid" id="week-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE VIEW -->
+    <div class="view" id="view-perf">
+      <div class="perf-view-inner" id="perf-view-inner">
+        <div class="empty-state" id="perf-empty">
+          <div class="icon">📊</div>
+          <p>Conecta Strava para ver tu análisis de rendimiento.</p>
+        </div>
+        <div id="perf-content" style="display:none">
+          <div class="section-title">Rendimiento <span>running</span></div>
+          <div class="perf-grid" id="perf-grid"></div>
+          <div class="trend-bar-wrap">
+            <div class="lp-label" style="margin-bottom:10px">Distancia semanal (últimas 8 semanas)</div>
+            <div class="trend-bars" id="trend-bars"></div>
+            <div class="trend-labels" id="trend-labels"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /right-content -->
+</div><!-- /app-body -->
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════════════ */
+const CLIENT_ID      = '214733';
+const CLIENT_SECRET  = '21e4ba9831714e2672a03358d7b6dcf088bcf2b7';
+const REDIRECT_URI   = 'https://leroche85.github.io/My-coach/';
+const SCOPE          = 'read,activity:read_all';
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════════ */
+let stravaToken  = null;
+let athleteData  = null;
+let activities   = [];      // all cached
+let newActs      = [];      // detected new on last sync
+let chatHistory  = [];      // current session chat
+let pendingPlan  = null;    // plan waiting for calendar push
+let isBusy       = false;
+
+/* memory persisted in localStorage */
+const MEM = {
+  get: () => { try { return JSON.parse(localStorage.getItem('coach_memory')||'{}'); } catch { return {}; } },
+  set: (obj) => localStorage.setItem('coach_memory', JSON.stringify(obj)),
+  update: (patch) => MEM.set({...MEM.get(), ...patch})
+};
+
+/* ══════════════════════════════════════════════════════════════
+   STORAGE KEYS
+══════════════════════════════════════════════════════════════ */
+const KEYS = {
+  token:     'coach_token',
+  athlete:   'coach_athlete',
+  acts:      'coach_acts_v3',
+  lastSync:  'coach_last_sync',
+  plan:      'coach_active_plan',
+  chat:      'coach_chat_history'
+};
+
+/* ══════════════════════════════════════════════════════════════
+   OAUTH
+══════════════════════════════════════════════════════════════ */
+function connectStrava() {
+  location.href = `https://www.strava.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${SCOPE}`;
+}
+
+function disconnect() {
+  if (!confirm('¿Desconectar de Strava? Se borrará la sesión local.')) return;
+  [KEYS.token,KEYS.athlete,KEYS.acts,KEYS.lastSync,KEYS.plan,KEYS.chat].forEach(k=>localStorage.removeItem(k));
+  location.href = REDIRECT_URI;
+}
+
+async function exchangeCode(code) {
+  const r = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://www.strava.com/oauth/token'), {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ client_id:CLIENT_ID, client_secret:CLIENT_SECRET, code, grant_type:'authorization_code' })
+  });
+  return r.json();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STRAVA API
+══════════════════════════════════════════════════════════════ */
+async function stravaGet(path, params={}) {
+  const qs   = new URLSearchParams(params).toString();
+  const url  = 'https://corsproxy.io/?' + encodeURIComponent(`https://www.strava.com/api/v3${path}${qs?'?'+qs:''}`);
+  const r    = await fetch(url, { headers:{ Authorization:`Bearer ${stravaToken}` }});
+  if (!r.ok) throw new Error(`Strava ${r.status}`);
+  return r.json();
+}
+
+/* ── SMART SYNC ──
+   - Load cache first
+   - Fetch only page 1 (30 newest)
+   - If newest cached ID matches first result → no new acts
+   - Else append new activities and update cache
+*/
+async function syncActivities() {
+  setSyncState('syncing', 'Comprobando actividades nuevas...');
+  showSyncBar('Comprobando actividades nuevas en Strava...');
+
+  const cached = loadCachedActs();
+  const newestCachedId = cached[0]?.id || 0;
+
+  try {
+    const fresh = await stravaGet('/athlete/activities', { per_page:30, page:1 });
+    newActs = fresh.filter(a => a.id > newestCachedId);
+
+    if (newActs.length > 0) {
+      // Prepend new, deduplicate, cap at 600
+      const merged = [...newActs, ...cached];
+      const seen = new Set();
+      activities = merged.filter(a => { if(seen.has(a.id)) return false; seen.add(a.id); return true; }).slice(0,600);
+    } else {
+      activities = cached.length ? cached : fresh;
+    }
+
+    saveCachedActs();
+    localStorage.setItem(KEYS.lastSync, Date.now().toString());
+    setSyncState('live', 'sincronizado');
+    hideSyncBar();
+    return newActs.length;
+  } catch(e) {
+    setSyncState('err', 'error sync');
+    hideSyncBar();
+    throw e;
+  }
+}
+
+function loadCachedActs() {
+  try { return JSON.parse(localStorage.getItem(KEYS.acts)||'[]'); } catch { return []; }
+}
+function saveCachedActs() {
+  try { localStorage.setItem(KEYS.acts, JSON.stringify(activities)); } catch {
+    activities = activities.slice(0,400);
+    localStorage.setItem(KEYS.acts, JSON.stringify(activities));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════════════════ */
+const fmtDist  = m  => (m/1000).toFixed(1)+'km';
+const fmtTime  = s  => { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h?`${h}h${String(m).padStart(2,'0')}m`:`${m}min`; };
+const fmtPace  = ms => { if(!ms) return '—'; const k=1000/ms/60; return `${Math.floor(k)}:${String(Math.round((k%1)*60)).padStart(2,'0')}/km`; };
+const fmtDate  = d  => new Date(d).toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+const dayName  = d  => ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][new Date(d).getDay()];
+const actIcon  = t  => ({Run:'🏃',TrailRun:'🌲',VirtualRun:'💻',Ride:'🚴',Walk:'🚶',Hike:'⛰️',WeightTraining:'🏋️',Yoga:'🧘'}[t]||'⚡');
+const isRun    = t  => ['Run','TrailRun','VirtualRun'].includes(t);
+const lastSync = () => { const ts=+localStorage.getItem(KEYS.lastSync)||0; if(!ts) return 'nunca'; const m=Math.round((Date.now()-ts)/60000); return m<1?'ahora mismo':m<60?`hace ${m}min`:`hace ${Math.round(m/60)}h`; };
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════════════ */
+function renderSidebar() {
+  const d30 = activities.filter(a=>Date.now()-new Date(a.start_date)<30*24*36e5);
+  const runs = d30.filter(a=>isRun(a.type));
+
+  document.getElementById('lp-stats').style.display = 'block';
+  document.getElementById('lp-count').textContent  = d30.length;
+  document.getElementById('lp-dist').textContent   = fmtDist(d30.reduce((a,b)=>a+(b.distance||0),0));
+  document.getElementById('lp-time').textContent   = fmtTime(d30.reduce((a,b)=>a+(b.moving_time||0),0));
+  document.getElementById('lp-elev').textContent   = Math.round(d30.reduce((a,b)=>a+(b.total_elevation_gain||0),0))+'m';
+  const avgSpeed = runs.length ? runs.reduce((a,b)=>a+(b.average_speed||0),0)/runs.length : 0;
+  document.getElementById('lp-pace').textContent   = fmtPace(avgSpeed);
+
+  document.getElementById('lp-recents').style.display = 'block';
+  const list = document.getElementById('recents-list');
+  list.innerHTML = '';
+  activities.slice(0,10).forEach(a => {
+    const isNew = newActs.find(n=>n.id===a.id);
+    const div = document.createElement('div');
+    div.className = `act-row${isNew?' is-new':''}`;
+    div.innerHTML = `
+      <span class="act-icon">${actIcon(a.type)}</span>
+      <div class="act-info">
+        <div class="act-name">${a.name}</div>
+        <div class="act-meta">${fmtDate(a.start_date_local)} · ${fmtDist(a.distance)}</div>
+      </div>
+      ${isNew?'<span class="new-tag">NEW</span>':''}`;
+    div.onclick = () => quickAsk(`Dame el análisis completo de mi actividad "${a.name}" del ${fmtDate(a.start_date_local)}: ${fmtDist(a.distance)}, ${fmtTime(a.moving_time)}${a.average_heartrate?', FC '+Math.round(a.average_heartrate)+'bpm':''}.`);
+    list.appendChild(div);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PERFORMANCE VIEW
+══════════════════════════════════════════════════════════════ */
+function renderPerformance() {
+  if (!activities.length) return;
+  document.getElementById('perf-empty').style.display = 'none';
+  document.getElementById('perf-content').style.display = 'block';
+
+  const runs30 = activities.filter(a=>isRun(a.type)&&Date.now()-new Date(a.start_date)<30*24*36e5);
+  const runs90 = activities.filter(a=>isRun(a.type)&&Date.now()-new Date(a.start_date)<90*24*36e5);
+  const prev30 = activities.filter(a=>isRun(a.type)&&Date.now()-new Date(a.start_date)<60*24*36e5&&Date.now()-new Date(a.start_date)>30*24*36e5);
+
+  const avgPace30   = runs30.length ? runs30.reduce((a,b)=>a+(b.average_speed||0),0)/runs30.length : 0;
+  const avgPacePrev = prev30.length ? prev30.reduce((a,b)=>a+(b.average_speed||0),0)/prev30.length : 0;
+  const totalKm30   = runs30.reduce((a,b)=>a+(b.distance||0),0)/1000;
+  const totalKm90   = runs90.reduce((a,b)=>a+(b.distance||0),0)/1000;
+  const avgFC       = runs30.filter(a=>a.average_heartrate).reduce((a,b,_,arr)=>a+b.average_heartrate/arr.length,0);
+
+  const paceImproved = avgPace30 > avgPacePrev;
+  const paceDelta    = avgPacePrev ? Math.abs(((1000/avgPace30/60)-(1000/avgPacePrev/60))).toFixed(2) : null;
+
+  const grid = document.getElementById('perf-grid');
+  const metrics = [
+    { label:'Ritmo medio 30d', val: fmtPace(avgPace30), delta: paceDelta?`${paceImproved?'↑':'↓'} ${paceDelta} min/km vs mes ant.`:null, dir: paceImproved?'up':'down' },
+    { label:'Km este mes', val: totalKm30.toFixed(0)+'km', delta: runs30.length+' sesiones', dir:'neutral' },
+    { label:'Km últimos 90d', val: totalKm90.toFixed(0)+'km', delta: runs90.length+' sesiones', dir:'neutral' },
+    { label:'FC media runs', val: avgFC?Math.round(avgFC)+'bpm':'—', delta: avgFC?'zona aeróbica':'sin datos', dir:'neutral' },
+  ];
+
+  grid.innerHTML = metrics.map(m=>`
+    <div class="perf-card">
+      <div class="perf-label">${m.label}</div>
+      <div class="perf-val">${m.val}</div>
+      ${m.delta?`<div class="perf-delta ${m.dir}">${m.delta}</div>`:''}
+    </div>`).join('');
+
+  // Weekly distance bars (last 8 weeks)
+  const weeks = [];
+  for(let i=7;i>=0;i--) {
+    const end   = new Date(Date.now() - i*7*24*36e5);
+    const start = new Date(end.getTime() - 7*24*36e5);
+    const wRuns = activities.filter(a=>isRun(a.type)&&new Date(a.start_date)>=start&&new Date(a.start_date)<end);
+    const km    = wRuns.reduce((a,b)=>a+(b.distance||0),0)/1000;
+    const lbl   = `${start.getDate()}/${start.getMonth()+1}`;
+    weeks.push({km,lbl});
+  }
+  const maxKm = Math.max(...weeks.map(w=>w.km),1);
+  const barsEl   = document.getElementById('trend-bars');
+  const labelsEl = document.getElementById('trend-labels');
+  barsEl.innerHTML   = weeks.map((w,i)=>`<div class="t-bar${i===7?' active':''}" style="height:${Math.round(w.km/maxKm*100)}%" title="${w.km.toFixed(1)}km"></div>`).join('');
+  labelsEl.innerHTML = weeks.map(w=>`<div class="trend-lbl">${w.lbl}</div>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PLAN VIEW
+══════════════════════════════════════════════════════════════ */
+function renderPlan(plan) {
+  if (!plan) {
+    const stored = localStorage.getItem(KEYS.plan);
+    if (stored) { try { plan = JSON.parse(stored); } catch{} }
+  }
+  if (!plan || !plan.days) {
+    document.getElementById('plan-empty').style.display = 'flex';
+    document.getElementById('plan-content').style.display = 'none';
+    return;
+  }
+  document.getElementById('plan-empty').style.display = 'none';
+  document.getElementById('plan-content').style.display = 'block';
+
+  document.getElementById('plan-week-label').textContent = plan.weekLabel || 'semana actual';
+  document.getElementById('plan-meta').textContent = `Generado ${plan.createdAt||'hoy'} · objetivo: composición corporal`;
+
+  const sessions = plan.days.filter(d=>d.type!=='rest');
+  const totalKm  = sessions.reduce((a,b)=>a+(b.km||0),0);
+  const totalMin = sessions.reduce((a,b)=>a+(b.durationMin||0),0);
+  const load     = sessions.reduce((a,b)=>a+(b.load||0),0);
+
+  document.getElementById('ps-sessions').textContent = sessions.length;
+  document.getElementById('ps-km').textContent       = totalKm.toFixed(0)+'km';
+  document.getElementById('ps-time').textContent     = fmtTime(totalMin*60);
+  document.getElementById('ps-load').textContent     = load ? load+'/100' : '—';
+
+  const grid  = document.getElementById('week-grid');
+  const today = new Date().toDateString();
+  grid.innerHTML = '';
+  plan.days.forEach(d => {
+    const isToday = d.date && new Date(d.date).toDateString()===today;
+    const card = document.createElement('div');
+    card.className = `day-card${d.type==='rest'?' rest':' has-session'}${isToday?' today':''}`;
+    card.innerHTML = `
+      <div class="day-name">${d.dayName||''}</div>
+      <div class="day-date">${d.dateLabel||''}</div>
+      ${d.type!=='rest'?`
+        <div class="session-type">${d.title||d.type}</div>
+        <div class="session-detail">${d.detail||''}</div>
+        <div class="session-dot ${d.type}"></div>
+      `:`<div class="session-detail" style="color:var(--text3)">Descanso</div>`}`;
+    card.onclick = () => { if(d.type!=='rest') quickAsk(`Dame los detalles del entrenamiento "${d.title}" del plan: ${d.detail}. ¿Cómo debo ejecutarlo exactamente?`); };
+    grid.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GOOGLE CALENDAR
+══════════════════════════════════════════════════════════════ */
+async function pushPlanToCalendar() {
+  if (!pendingPlan && !localStorage.getItem(KEYS.plan)) {
+    addMsg('coach','<p>No hay ningún plan activo. Pídeme que genere uno primero.</p>'); return;
+  }
+  const plan = pendingPlan || JSON.parse(localStorage.getItem(KEYS.plan)||'{}');
+  hidePendingBanner();
+
+  // Use the Google Calendar MCP via the AI to create events
+  const planStr = JSON.stringify(plan.days||[]);
+  addMsg('coach','<p>Añadiendo sesiones a <strong>Google Calendar</strong>...</p>');
+
+  // We pass the plan to Claude which will use gcal MCP
+  await sendMessageToAI(
+    `Tengo este plan de entrenamiento JSON: ${planStr}. Crea eventos en Google Calendar para cada sesión (no los días de descanso). Usa la zona horaria local. Asigna 1h por defecto a las sesiones fáciles, 45min a las de intervalos, 2h a la larga. Añade en la descripción del evento los detalles del entrenamiento.`,
+    true
+  );
+}
+
+function showPendingBanner() { document.getElementById('pending-banner').classList.add('show'); }
+function hidePendingBanner() { document.getElementById('pending-banner').classList.remove('show'); }
+
+/* ══════════════════════════════════════════════════════════════
+   CHAT / AI
+══════════════════════════════════════════════════════════════ */
+function buildSystemPrompt() {
+  const mem  = MEM.get();
+  const d30  = activities.filter(a=>Date.now()-new Date(a.start_date)<30*24*36e5);
+  const d7   = activities.filter(a=>Date.now()-new Date(a.start_date)<7*24*36e5);
+  const runs = d30.filter(a=>isRun(a.type));
+
+  const summarize = (acts) => {
+    if (!acts.length) return 'Sin actividad';
+    const byType = {};
+    acts.forEach(a=>{
+      byType[a.type]=byType[a.type]||{n:0,d:0,t:0,e:0};
+      byType[a.type].n++; byType[a.type].d+=a.distance||0;
+      byType[a.type].t+=a.moving_time||0; byType[a.type].e+=a.total_elevation_gain||0;
+    });
+    return Object.entries(byType).map(([t,v])=>
+      `  ${t}: ${v.n} sesiones · ${fmtDist(v.d)} · ${fmtTime(v.t)} · +${Math.round(v.e)}m desnivel`
+    ).join('\n');
+  };
+
+  const recent5 = activities.slice(0,5).map(a=>
+    `  - ${fmtDate(a.start_date_local)} [${a.type}] "${a.name}": ${fmtDist(a.distance)}, ${fmtTime(a.moving_time)}${a.average_heartrate?` · FC:${Math.round(a.average_heartrate)}bpm`:''}${isRun(a.type)?` · ${fmtPace(a.average_speed)}`:''}${a.total_elevation_gain?` · +${Math.round(a.total_elevation_gain)}m`:''}`
+  ).join('\n');
+
+  const avgPace = runs.length ? runs.reduce((a,b)=>a+(b.average_speed||0),0)/runs.length : 0;
+
+  const newActsStr = newActs.length
+    ? `\nACTIVIDADES NUEVAS DESDE ÚLTIMA SESIÓN:\n${newActs.map(a=>`  - ${fmtDate(a.start_date_local)} "${a.name}": ${fmtDist(a.distance)}, ${fmtTime(a.moving_time)}`).join('\n')}`
+    : '';
+
+  const memStr = Object.keys(mem).length
+    ? `\nMEMORIA PERSISTENTE DEL ATLETA:\n${Object.entries(mem).map(([k,v])=>`  ${k}: ${v}`).join('\n')}`
+    : '';
+
+  const currentPlan = localStorage.getItem(KEYS.plan);
+  const planStr = currentPlan ? `\nPLAN ACTIVO:\n${currentPlan}` : '';
+
+  return `Eres STRIDE, un coach de running de élite con IA. Entrenas a este atleta cuyo objetivo es PÉRDIDA DE GRASA y COMPOSICIÓN CORPORAL mediante running.
+
+═══ DATOS STRAVA (live) ═══
+Atleta: ${athleteData?.firstname||'Runner'} ${athleteData?.lastname||''}
+Total actividades: ${activities.length} · Última sync: ${lastSync()}
+
+ÚLTIMOS 7 DÍAS:
+${summarize(d7)}
+
+ÚLTIMOS 30 DÍAS:
+${summarize(d30)}
+Ritmo medio running: ${fmtPace(avgPace)}
+
+5 ACTIVIDADES RECIENTES:
+${recent5}
+${newActsStr}${memStr}${planStr}
+
+═══ INSTRUCCIONES DE COACHING ═══
+- Usa SIEMPRE los datos reales de Strava. Cita cifras concretas.
+- Para pérdida de grasa: prioriza zonas 2-3 (aeróbico), volumen sobre intensidad, consistencia.
+- Detecta señales de sobreentrenamiento (FC elevada, bajada de ritmo, sesiones muy juntas).
+- Cuando generes un plan semanal, devuélvelo TAMBIÉN en JSON con esta estructura exacta al final del mensaje:
+  <PLAN_JSON>{"weekLabel":"semana X","createdAt":"fecha","days":[{"dayName":"Lun","dateLabel":"6","date":"2024-01-06","type":"easy","title":"Rodaje suave","detail":"8km Z2, 5:30-6:00/km","km":8,"durationMin":50,"load":40},...]}</PLAN_JSON>
+  Los types válidos: easy, tempo, interval, long, rest
+- Cuando el usuario quiera añadir el plan a Google Calendar, usa la herramienta gcal para crear los eventos.
+- Recuerda información importante del atleta para futuras sesiones.
+- Habla siempre en español. Tono: directo, motivador, basado en datos. No hagas listas largas innecesarias.`;
+}
+
+async function sendMessageToAI(text, silentUser=false) {
+  if (!silentUser) {
+    addMsg('user', `<p>${escHtml(text)}</p>`);
+  }
+  chatHistory.push({ role:'user', content: text });
+
+  isBusy = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: buildSystemPrompt(),
+        messages: chatHistory.slice(-16),
+        tools: [{
+          type: 'web_search_20250305',
+          name: 'web_search'
+        }],
+        mcp_servers: [{
+          type: 'url',
+          url: 'https://gcal.mcp.claude.com/mcp',
+          name: 'gcal'
+        }]
+      })
+    });
+
+    const data  = await res.json();
+    const reply = data?.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n') || 'No pude generar respuesta.';
+
+    // Extract plan JSON if present
+    const planMatch = reply.match(/<PLAN_JSON>([\s\S]*?)<\/PLAN_JSON>/);
+    let cleanReply  = reply.replace(/<PLAN_JSON>[\s\S]*?<\/PLAN_JSON>/g,'').trim();
+
+    chatHistory.push({ role:'assistant', content: reply });
+    saveChatHistory();
+
+    removeTyping();
+    addMsg('coach', mdToHtml(cleanReply));
+
+    if (planMatch) {
+      try {
+        pendingPlan = JSON.parse(planMatch[1].trim());
+        localStorage.setItem(KEYS.plan, JSON.stringify(pendingPlan));
+        renderPlan(pendingPlan);
+        showPendingBanner();
+        // Also show calendar card in chat
+        addCalendarCard(pendingPlan);
+      } catch(e) { console.warn('plan parse error', e); }
+    }
+
+    // Auto-update memory from conversation
+    autoUpdateMemory(text, cleanReply);
+
+  } catch(e) {
+    removeTyping();
+    addMsg('coach', `<p><em>Error de conexión: ${escHtml(e.message)}</em></p>`);
+  }
+
+  isBusy = false;
+  document.getElementById('send-btn').disabled = false;
+  document.getElementById('chat-input').focus();
+}
+
+function autoUpdateMemory(userMsg, coachReply) {
+  // Simple heuristic: if coach mentions personal facts, store them
+  const mem = MEM.get();
+  const combined = (userMsg+' '+coachReply).toLowerCase();
+  if (combined.includes('peso') || combined.includes('kg')) {
+    const m = combined.match(/(\d{2,3})\s*kg/);
+    if (m) mem.peso = m[1]+'kg';
+  }
+  if (combined.includes('evento') || combined.includes('carrera') || combined.includes('race')) {
+    const m = combined.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+    if (m) mem.proximo_evento = m[1];
+  }
+  MEM.set(mem);
+}
+
+function addCalendarCard(plan) {
+  const sessions = (plan.days||[]).filter(d=>d.type!=='rest');
+  const msgs = document.getElementById('messages');
+  const div  = document.createElement('div');
+  div.className = 'msg coach';
+  div.innerHTML = `
+    <div class="msg-av">IA</div>
+    <div class="msg-bubble">
+      <p><strong>${sessions.length} sesiones</strong> listas para añadir a Google Calendar:</p>
+      ${sessions.map(s=>`
+        <div class="cal-card">
+          <div class="cal-card-title">${s.title}</div>
+          <div class="cal-card-meta">${s.dayName} · ${s.durationMin||60}min · ${s.km||'—'}km</div>
+        </div>`).join('')}
+      <div class="cal-actions">
+        <button class="cal-btn primary" onclick="pushPlanToCalendar()">📅 Añadir a Google Calendar</button>
+        <button class="cal-btn" onclick="showView('plan')">Ver plan completo</button>
+      </div>
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function saveChatHistory() {
+  try { localStorage.setItem(KEYS.chat, JSON.stringify(chatHistory.slice(-30))); } catch{}
+}
+function loadChatHistory() {
+  try { return JSON.parse(localStorage.getItem(KEYS.chat)||'[]'); } catch { return []; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════════════════════════ */
+function addMsg(role, html) {
+  const msgs = document.getElementById('messages');
+  const div  = document.createElement('div');
+  div.className = `msg ${role}`;
+  const av   = document.createElement('div');
+  av.className = 'msg-av';
+  av.innerHTML  = role==='coach' ? 'IA' : '👤';
+  const bub  = document.createElement('div');
+  bub.className = 'msg-bubble';
+  bub.innerHTML  = html;
+  div.appendChild(av);
+  div.appendChild(bub);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const div  = document.createElement('div');
+  div.className = 'msg coach'; div.id = 'typing-msg';
+  div.innerHTML = `<div class="msg-av">IA</div><div class="msg-bubble"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { document.getElementById('typing-msg')?.remove(); }
+
+function mdToHtml(t) {
+  return t
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`(.*?)`/g,'<code>$1</code>')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>')
+    .replace(/\n\n+/g,'</p><p>')
+    .replace(/^(?!<[hul])/,'<p>').replace(/(?<![>])$/,'</p>');
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function setSyncState(state, txt) {
+  const dot = document.getElementById('sdot');
+  dot.className = 'sdot ' + (state==='live'?'live':state==='syncing'?'syncing':state==='err'?'err':'');
+  document.getElementById('stxt').textContent = txt;
+}
+function showSyncBar(msg) {
+  document.getElementById('sync-bar-msg').textContent = msg;
+  document.getElementById('sync-bar').classList.add('show');
+}
+function hideSyncBar() { document.getElementById('sync-bar').classList.remove('show'); }
+
+function showView(v) {
+  ['chat','plan','perf'].forEach(id=>{
+    document.getElementById('view-'+id).classList.toggle('active', id===v);
+    document.getElementById('tab-'+id).classList.toggle('active', id===v);
+  });
+}
+
+function sendMessage() {
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if (!txt || isBusy) return;
+  inp.value = ''; autoGrow(inp);
+  sendMessageToAI(txt);
+}
+
+function quickAsk(q) {
+  showView('chat');
+  sendMessageToAI(q);
+}
+
+function handleKey(e) {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 110) + 'px';
+  document.getElementById('send-btn').disabled = !el.value.trim() || isBusy;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════════ */
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const code   = params.get('code');
+  stravaToken  = localStorage.getItem(KEYS.token);
+  athleteData  = JSON.parse(localStorage.getItem(KEYS.athlete)||'null');
+
+  // ── OAuth callback ──
+  if (code && !stravaToken) {
+    history.replaceState({}, '', REDIRECT_URI);
+    document.getElementById('login-screen').innerHTML = `
+      <div class="login-wordmark">stride</div>
+      <p style="color:var(--text3);font-size:14px;margin-top:16px">Conectando con Strava...</p>`;
+
+    if (!CLIENT_SECRET) {
+      document.getElementById('login-screen').innerHTML = `
+        <div class="login-wordmark">!</div>
+        <h2 class="login-headline">Falta el <span>CLIENT_SECRET</span></h2>
+        <p class="login-sub">Abre el archivo HTML, busca la variable CLIENT_SECRET y pega tu secreto de Strava.</p>
+        <button class="btn-connect" onclick="location.href=REDIRECT_URI">Reintentar</button>`;
+      return;
+    }
+
+    try {
+      const data = await exchangeCode(code);
+      if (!data.access_token) throw new Error(data.message||'Token inválido');
+      stravaToken = data.access_token;
+      athleteData = data.athlete;
+      localStorage.setItem(KEYS.token, stravaToken);
+      localStorage.setItem(KEYS.athlete, JSON.stringify(athleteData));
+      await bootApp();
+    } catch(e) {
+      document.getElementById('login-screen').innerHTML = `
+        <div class="login-wordmark">×</div>
+        <p style="color:#ef4444;margin:16px 0">${escHtml(e.message)}</p>
+        <button class="btn-connect" onclick="location.href=REDIRECT_URI">Reintentar</button>`;
+    }
+    return;
+  }
+
+  if (stravaToken) { await bootApp(); return; }
+
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function bootApp() {
+  document.getElementById('login-screen').style.display = 'none';
+
+  // Athlete pill
+  if (athleteData?.firstname) {
+    document.getElementById('athlete-pill').style.display = 'flex';
+    document.getElementById('av-name').textContent = athleteData.firstname;
+    document.getElementById('av-img').src = athleteData.profile_medium || '';
+  }
+
+  // Load chat history
+  chatHistory = loadChatHistory();
+
+  // Load cached activities immediately
+  activities = loadCachedActs();
+  if (activities.length) {
+    renderSidebar();
+    renderPerformance();
+    renderPlan();
+  }
+
+  // Sync new activities
+  try {
+    const count = await syncActivities();
+    renderSidebar();
+    renderPerformance();
+
+    // Welcome message
+    const name    = athleteData?.firstname || 'Runner';
+    const d30     = activities.filter(a=>Date.now()-new Date(a.start_date)<30*24*36e5);
+    const newTxt  = count > 0 ? `He detectado <strong>${count} actividad${count>1?'es':''} nueva${count>1?'s':''}</strong> desde tu última sesión. ` : '';
+    const memKeys = Object.keys(MEM.get());
+
+    addMsg('coach', `<p>Hola <strong>${name}</strong>. ${newTxt}Tengo <strong>${activities.length} actividades</strong> cargadas de Strava.</p><p>En los últimos 30 días: <strong>${d30.length} sesiones</strong>${d30.length?', '+fmtDist(d30.reduce((a,b)=>a+(b.distance||0),0)):''}.${memKeys.length?' Recuerdo tu perfil de sesiones anteriores.':''}</p><p>¿Quieres que analice tu semana, genere un plan o revisemos tu progreso hacia la composición corporal?</p>`);
+
+    if (count > 0) {
+      // Auto-brief on new activities
+      setTimeout(() => quickAsk(`He visto que tengo ${count} actividad${count>1?'es':'a'} nueva${count>1?'s':''}. Analízala${count>1?'s':''} brevemente y dime cómo encaja${count>1?'n':''} en mi objetivo de composición corporal.`), 1200);
+    }
+
+  } catch(e) {
+    setSyncState('err', 'sin sync');
+    addMsg('coach', `<p>No pude sincronizar con Strava ahora mismo (${escHtml(e.message)}), pero tengo el historial cacheado. ¿En qué te ayudo?</p>`);
+  }
+
+  document.getElementById('send-btn').disabled = false;
+}
+
+init();
+</script>
+</body>
+</html>
